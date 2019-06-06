@@ -114,6 +114,109 @@ This is the median of the population.
 2 and 1 are parameters for the specific beta density
 
 
+# Conditional Probability
+
+let B be an event so that P(B) > 0
+
+P(A|B) = P(A n B) / P(B)
+
+if A and B are independent
+
+P(A|B) = P(A n B) / P(B) = P(A)P(B)/P(B) = P(A)
+
+## Bayes' rule
+
+when you want to find P(B|A) but you have P(A|B)
+
+P(B|A) = P(A|B)P(B) / (P(A|B)P(B) + P(A|Bc)P(Bc))
+
+
+Sensitivity = P(+|D)
+Specificity = P(-|Dc)
+
++ for positive
+- for negative test result
+
+D for disease, Dc for no disease
+
+Positive predictive value = P(D|+)
+Negative predictive value = P(Dc|-)
+
+## Likelihood ratios
+
+probability/1-probability
+
+odds of disease post-test
+
+odds of the disease in the absence of the test result * diagnostic likelihood ratio of the test result
+
+post-test odds of D = DLR+ * pre-test odds of D
+
+specificity 98.5 %
+sensitivity 99.7 %
+
+DLR+ = .997/(1-.985) which is approx. 66
+
+DLR- = (1-.997)/.985 which is approx. 0.003
+
+
+IID means independent and identically distributed - for independent variables
+
+# Expected Values
+
+Expected values are properties of distributions
+
+The mean is a characterization of the center
+Variance and standard deviation are charactarizations of how the spread is
+
+
+E[X] = sum(x*p(x))
+
+E[X] represents the center of mass of a collection of locations and weights {x, p(x)}
+
+the sample mean estimates this population mean.
+
+```{r}
+library(manipulate)
+```
+
+mean squared error is a measure of imbalance
+
+*The purpose of Statistics is finding gravity points for the significant attributes of a population.*
+
+*The values are never final, the attributes move around the neightbourhood of certain values within confidence interval certainties.*
+*There is always room for error.*
+
+The distribution of averages of a population will be centered at the same place as the distribution of the population itself.
+
+## Summary
+
+- Expected values are properties of distributions.
+- The population mean is the center of mass of population.(infinite coin flips)
+- The sample mean is the center of mass of the observed data.(mean of 10 coin flips)
+- The sample mean is an estimate of the population mean.
+- The sample mean is unbiased. The population mean of its distribution is the mean that it's trying to estimate.
+- The more data that goes into the sample mean, the more concentrated its density/mass function is around the population mean.
+
+# Swirld Practices
+
+to download the swirl course:
+
+```{r}
+library(swirl)
+install_from_swirl("Statistical Inference")
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
 
