@@ -1,0 +1,138 @@
+---
+title: 'Statistical Inference : Week 2 Classes'
+author: "Yigit Ozan Berk"
+date: "6/12/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Week 2
+
+Variability
+Distributions
+Asymptotics
+Excercises in Swirl
+Quiz
+
+# Variability
+
+Var(X) = E[(X - mu)^2] = E[X^2] - E[X]^2
+
+expected value of [x^2] minus the expected value of X quantity squared
+
+square root of the variance is called standard deviation
+
+E[X] = 3.5 - x is a toss of a die
+
+E[X^2] = 1^2 * 1/6 + 2^2 * 1/6 + ....... + 6^2 * 1/6 = 15.17
+
+Var(X) = E[X^2] - E[X]^2 equals approximately 2.92
+
+the variance of a biased coin is p*(1-p)
+
+
+
+population variance and the sample variance is directly proportional
+
+Var(X) = E[(X - mu)^2] = E[X^2] - E[X]^2
+
+Sample variance = S^2
+
+sample variance is the average square of distance of the observed observations minus the sample mean.
+
+the expected value of the sample variance is the population variance
+
+
+# standard error
+
+we call the standard deviation of a statistic 'a standard error'
+
+
+#data example
+
+```{r}
+library(UsingR)
+data(father.son)
+x <- father.son$sheight
+n <- length(x)
+round(c(var(x), var(x)/n, sd(x), sd(x)/sqrt(n)), 2)
+```
+
+0.09 is the standard deviation in the distribution of averages of n children's heights
+
+# Summary
+
+the sample variance estimates the population variance
+
+the distribution of the sample variance is centered at what it's estimating
+
+it gets more concentrated around the population variance with larger sample sizes
+
+the variance of the sample mean is the population variance devided by n
+
+# Important distribution types
+
+## Binomial distribution
+
+'bernoulli distribution' - arises as the result of a binary outcome
+
+only takes values 1 or 0 with probability p
+
+variance is p*(1-p)
+
+### binomial trials 
+
+binomial random variable is the total number of heads in a potentially biased coin.
+
+```{r}
+choose(8,7) * .5^8 + choose(8,8) * .5^8
+
+pbinom(6, size = 8, prob = .5, lower.tail = FALSE)
+```
+
+
+## normal distribution
+
+gaussian distribution
+
+
+```{r}
+pnorm(1160, mean = 1020, sd = 50, lower.tail = F)
+
+#is the same as
+
+pnorm(2.8, lower.tail = FALSE)
+
+#because (1160-1020)/50 equals 2.8
+#1160 is 2.8 standard deviations away from the mean
+
+#when calculating in terms of standard normals, that's x=2.8
+#because sd = 1
+
+
+
+```
+
+## Poisson distribution
+
+used to model counts
+
+uses for poisson distribution
+
+- modeling count data
+- modeling event-time or survival data
+- modeling contingency tables
+- approximating binomials when n is large and p is small
+
+```{r}
+pbinom(2, size = 500, prob = 0.01)
+
+ppois(2, lambda = 500 * 0.01)
+```
+
+# Asymptotics
+
+
