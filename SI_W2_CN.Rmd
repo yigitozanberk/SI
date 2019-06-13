@@ -135,4 +135,97 @@ ppois(2, lambda = 500 * 0.01)
 
 # Asymptotics
 
+when the sample size limits to infinity
+
+asymptotics are incredibly useful for simple statistical inference and approximations
+
+asymptotics from the bases for frequency interpretation of probabilities
+
+these results allow us to talk about the large sample distribution of sample means of a collection of iid observations
+
+```{r}
+library(ggplot2)
+n <- 1000
+means <- cumsum(rnorm(n))/(1:n)
+
+```
+
+an estimator is consistent if it converges to what you want to estimate
+
+# central limit theorem - CLT
+
+for our purposes, the CLT states that the distribution of averages of iid variables (properly normalized) becomes that of a standard normal as the sample size increases
+
+# asymptotics and the confidence intervals
+
+```{r}
+library(UsingR)
+data(father.son)
+x <- father.son$sheight
+(mean(x)+ c(-1, 1)*qnorm(0.975) * sd(x)/sqrt(length(x)))/12 #in feet rather than inches
+
+
+```
+
+sample proportions of coin toss p
+
+for %95 intervals, phat +- 1/sqrt(n) is a quick CI estimate for p
+
+quick guidelines for estimation:
+
+for 100 sample voters, 56 intent to vote for you.
+
+1/sqrt(100)= 0.1 so a back of the envelope calculation gives and approximate 95% interval of
+(0.46, 0.66)
+
+
+```{r}
+round(1/sqrt(10^(1:6)), 3)
+```
+
+```{r}
+0.56 + c(-1, 1) * qnorm(0.975) * sqrt(0.56 * .44/100)
+```
+
+```{r}
+binom.test(56, 100)$conf.int
+```
+
+```{r}
+n <- 20
+pvals <- seq(.1, .9, by = .05)
+nosim <- 1000
+coverage<- sapply(pvals, function(p) {
+        phats <- rbinom(nosim, prob = p, size = n)/n
+        ll <- phats - qnorm(0.975) * sqrt(phats * (1-phats)/n)
+        ul <- phats + qnorm(0.975) * sqrt(phats * (1 - phats)/n)
+        mean(ll < p & ul > p)
+})
+
+```
+
+this gives bad coverage because n is small. it works fine when n > 100. try it..
+
+quick fix
+
+(X + 2)/( n + 4)
+
+```{r}
+n <- 20
+pvals <- seq(.1, .9, by = .05)
+nosim <- 1000
+coverage<- sapply(pvals, function(p) {
+        phats <- (rbinom(nosim, prob = p, size = n)+ 2)/(n+4)
+        ll <- phats - qnorm(0.975) * sqrt(phats * (1-phats)/n)
+        ul <- phats + qnorm(0.975) * sqrt(phats * (1 - phats)/n)
+        mean(ll < p & ul > p)
+})
+```
+
+# Swirl Ex. 
+
+- variance
+- commonDistros
+- Asymptotics
+
 
