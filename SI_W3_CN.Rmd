@@ -1,0 +1,172 @@
+---
+title: "Statistical Inference Week 3 Class Notes"
+author: "Yigit Ozan Berk"
+date: "6/18/2019"
+output: html_document
+---
+
+# Lectures
+
+- T confidence intervals
+- T confidence intervals example
+- Independent group T intervals
+- A note on unequal variance
+
+# T confidence intervals
+
+T interval is for small sample sizes.
+
+If in doubt, use T interval, because as the sample size increases, T interval will become more and more like the Z interval(all distributions in previous lectures) anyway.
+
+T distribution was invented by William Gosset(under the pseudonym 'student')
+
+T distribution has only one parameter = degrees of freedom.
+## T distribution works well whenever the distribution of the data is roughly symmetric and mound shaped
+
+paired observations are often analyzed using the t interval by taking differences
+
+t interval converges to the same interval as the CLT yielded.
+
+for skewed distributions, the spirit of the t interval assumptions are violated
+- you can use the log scale, which often take care of the skewness of the data, or you can use other procedures. for example creating bootstrap conficdence intervals
+
+for highly discrete data, other distributions are available
+
+
+# Example - sleep data
+
+```{r}
+data(sleep)
+head(sleep)
+#extra hours slept, group ID, and subject ID
+```
+
+**check out the rmarkdown file for the nice plot here**
+
+```{r}
+#first 10 measurements
+g1 <- sleep$extra[1:10]
+g2 <- sleep$extra[11:20]
+difference <- g2 - g1
+mn <- mean(difference)
+s <- sd(difference)
+n <- 10
+
+mn + c(-1, 1)*qt(.975, n-1)*s/sqrt(n)
+#similarly written in different forms as follows:
+
+```
+
+```{r}
+t.test(difference)
+
+```
+
+
+```{r}
+t.test(g2, g1, paired = TRUE)
+
+```
+
+```{r}
+t.test(extra ~ I(relevel(group, 2)), paired = TRUE, data = sleep)
+#outcome extra is a function of the group, where paired equals true, evaluated from the data sleep
+```
+
+
+# Independent group t confidence intervals
+
+A-B testing or randomized trial, test group and placebo group sistemi demek.
+
+done in order to balance unobserved co-variates that may contaminate results
+
+we can't use the paired t test because the groups are independent.
+
+```{r}
+#mistakenly treating the sleep data as group
+
+n1 <- length(g1)
+n2 <- length(g2)
+sp <- sqrt(((n1-1)* sd(g1)^2 + (n2 - 1)*sd(g2)^2) / (n1 + n2 - 2))
+md <- mean(g2) - mean(g1)
+semd <- sp*sqrt(1/n1 + 1/n2)
+rbind(
+        md + c(-1 , 1) * qt(.975, n1+n2 - 2)*semd,
+        t.test(g2, g1, paired = FALSE, var.equal= TRUE)$conf,
+        #for this to work, the dataset needs to have only two levels.
+        t.test(g2, g1, paired = TRUE)$conf
+)
+
+```
+
+very different interval. if you take pairing into account... look at the graph in the lecture. A lot of variance is explained by the inter-subject variability.
+
+## Chickwiehgt data in R
+
+```{r}
+library(datasets)
+data(ChickWeight)
+library(reshape2)
+#define weight gain or loss
+wideCW <- dcast(ChickWeight, Diet + Chick ~ Time, value.var = "weight")
+names(wideCW)[-(1:2)] <- paste("time", names(wideCW)[-(1:2)], sep = "")
+library(dplyr)
+wideCW <- mutate(wideCW,
+                 gain = time21 - time0)
+```
+
+look at lecture plot
+
+violin plot looks nice
+
+```{r}
+wideCW14 <- subset(wideCW, Diet %in% c(1,4))
+rbind(
+        t.test(gain ~ Diet, paired = FALSE, var.equal = TRUE, data = wideCW14)$conf,
+        t.test(gain ~ Diet, paired = FALSE, var.equal = FALSE, data = wideCW14)$conf
+)
+
+```
+
+both intervals are in negative, suggesting, there is less weight gain in diet 1 compared to diet 4
+
+
+the confidence interval changes wether the variances are equal or unequal
+
+
+# a note on unequal variance
+
+> sx <- 15.34
+> sy <- 18.23
+> df <- ((sx^2/8+sy^2/21)^2)/((sx^2/8)/7+(sy^2/21)/20)
+> df <- ((sx^2/8+sy^2/21)^2)/((sx^2/8)^2/7+(sy^2/21)^2/20)
+
+instead of using this stuff, just setting var.equal = FALSE does the trick.
+
+## Comparing other kinds of data
+
+for binomial data, there's lots of ways to compare two groups
+- relative risk, risk difference, odds ratio
+- Chi-squared tests, normal approximations, exact tests.
+
+
+------------
+# additional class from Mathematical Biostatistics bootcamp 
+## conditional probabilities and densities
+
+```{r}
+install.packages("rgl")
+install.packages("mvtnorm")
+#you have to load XQuartz
+
+library(rgl)
+library(mvtnorm)
+sigma <- matrix(c(8, .25 * 8, .25 *8, 8 ), 2, 2)
+xvals <- seq(-10, 10, length = 100)
+yvals <- seq(-10, 10, length = 100)
+zvals <- apply(expand.grid(xvals, yvals), 1,
+               function(w) dmwnorm(w, mean= c(0, 0), sigma = sigma))
+persp3d(x = xvals, y = yvals, z = zvals, col = "lightblue")
+planes3d(0, 1, 0, -5, col = grey(.8))
+```
+
