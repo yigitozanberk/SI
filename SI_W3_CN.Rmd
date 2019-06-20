@@ -267,3 +267,4 @@ this is the probability of obtaining 10 or more infections if, in fact, the true
 
 it turns out that's a relatively low probability. only 3% chance.
 
+double s
