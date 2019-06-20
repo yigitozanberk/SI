@@ -12,6 +12,14 @@ output: html_document
 - Independent group T intervals
 - A note on unequal variance
 
+Further reading on p values
+statistical evidence: a likelihood paradigm - by richard royall
+toward evidence-based medical statistics. 1:the p value fallcy - by steve goodman
+the earth is round(p <.05) - by cohen
+
+
+
+
 # T confidence intervals
 
 T interval is for small sample sizes.
@@ -169,4 +177,93 @@ zvals <- apply(expand.grid(xvals, yvals), 1,
 persp3d(x = xvals, y = yvals, z = zvals, col = "lightblue")
 planes3d(0, 1, 0, -5, col = grey(.8))
 ```
+
+
+# Hypothesis Testing
+
+```{r}
+library(UsingR)
+data(father.son)
+t.test(father.son$sheight - father.son$fheight)
+```
+
+or add two vectors with parameter paired = TRUE
+
+we reject the null hypothesis : wether the population of son's height was equivalent to the population mean of father's heights.
+
+# Two group testing
+
+```{r}
+library(datasets)
+data(ChickWeight)
+library(reshape2)
+#define weight gain or loss
+wideCW <- dcast(ChickWeight, Diet + Chick ~ Time, value.var = "weight")
+names(wideCW)[-(1:2)] <- paste("time", names(wideCW)[-(1:2)], sep = "")
+library(dplyr)
+wideCW <- mutate(wideCW,
+                 gain = time21 - time0)
+
+
+wideCW14 <- subset(wideCW, Diet %in% c(1, 4))
+t.test(gain ~ Diet, paired = FALSE, var.equal = TRUE,
+       data = wideCW14)
+
+
+```
+
+*whenever you're doing two groups, unless you specify a hypothesized difference in the means, it's going to assume that your interested in testing whether the means are equal under the null hypothesis or different under the alternative.*
+
+t statistic : *how many estimated standard errors* our difference in means is from the hypothesized mean. the estimate, the difference in the average weight gain between the two diets. 
+
+# P valjues
+
+idea : suppose nothing is going on - how unusual is it to see the estimate we got if the null hypothesis is true?
+
+1 - define hypothetical distribution of data summary 
+2 - calculate the test statistic(how many standard deviations away from the mean)
+3 - compare the two values
+
+the p-value is the probability under the null hypothesis of obtaining evidence as extreme or more extreme than that obtained
+
+if the p-value is small, then either H0 is true and we have observed a rare event or H0 is false
+
+
+"attained significance level"
+
+for the two sided hypothesis test, double the smaller of the two one sided hypothesis test Pvalues. then you have to double the P values because symmetrically the other side of the bell.
+
+
+
+```{r}
+pbinom(6, size = 8, prob = .5, lower.tail = FALSE)
+```
+
+the probability of being 7 or larger would be one one-sided p value
+the probability of being 7 or smaller would be the other one-sided p-value
+
+you take those two one-sided p values, you take the smaller one, and double it
+
+this way you get two sided p-values for exact binomial situations
+
+```{r}
+pbinom(6, size = 8, prob = .5)
+```
+
+double the smaller one
+
+```{r}
+2 * pbinom(6, size = 8, prob = .5, lower.tail = FALSE)
+```
+
+under H0 : lambda = 0.05 so that lambda100 = 5
+consider Ha : lambda > 0.05
+
+```{r}
+ppois(9, 5, lower.tail = FALSE)
+```
+
+this is the probability of obtaining 10 or more infections if, in fact, the true rate of infections we've should've seen on a 100 person days at risk is 5. 
+
+it turns out that's a relatively low probability. only 3% chance.
 
