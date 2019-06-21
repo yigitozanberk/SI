@@ -25,4 +25,8 @@ One avenue for the control of power is at the design phase. There, assuming our 
 
 power is the probability of rejecting the null hypothesis when it is false.
 
+```{r}
+z <- qnorm(1 - alpha)
+pnorm(mu0 + z * sigma/sqrt(n), mean = mua, sd = sigma/sqrt(n), lower.tail = FALSE)
+```
 
