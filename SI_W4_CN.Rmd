@@ -100,3 +100,103 @@ power.t.test(power = 0.8, delta = 2, sd = 4, type = "one.sample", alt = "one.sid
 power.t.test(power = 0.8, delta = 100, sd = 200, type = "one.sample", alt = "one.sided")$n
 ```
 
+
+# Multiple Testing
+
+when you're doing more than 1 hypothesis tests, you need to check your results for correction.
+
+Hypothesis testing/significance analysis is commonly overused
+
+correcting for multiple testing avoids false positives or discoveries
+
+two key components:
+
+- error measure
+- correction
+
+
+Error rates to check in a multiple testing environment :
+
+- false positive rate : the rate at which false results (beta = 0) are called significant  E[V/m0]
+- family wise error rate (FWER) : the probability of at least one false positive
+Pr (V >= 1)
+- false discovery rate(FDR) : the rate at which claims of significance are false E[V/R]
+(meaning of letters in the screenshot of the table)
+
+
+ANOTHER Approach:
+
+Adjusted P-Values
+
+- one approach is to adjust the threshold alpha
+- a different aproach is to calculate "adjusted p-values"
+- They are not p-values anymore!!!!
+- but they can be used directly without adjusting alpha
+
+```{r}
+set.seed(1010093)
+pValues <- rep(NA, 1000)
+for(i in 1:1000) {
+        y <- rnorm(20)
+        x <- rnorm(20)
+        pValues[i] <- summary(lm(y ~ x))$coeff[2,4]
+        #2nd row 4th column is the p-value for the relationship between y and x
+}
+
+sum(pValues <0.05)
+```
+
+Even there is no connection between y and x, still we get 5 % of tests being performed are called significant
+
+```{r}
+#controls FWER
+sum(p.adjust(pValues, method = "bonferroni") < 0.05)
+```
+
+```{r}
+#Controls FDR
+sum(p.adjust(pValues, method = "BH") <0.05)
+#benjamini hawkbird correction for controlling FDR
+
+```
+
+Case study II : 50% true positives
+
+```{r}
+set.seed(1010093)
+pValues <- rep(NA, 1000)
+
+for(i in 1:1000){
+        x <- rnorm(20)
+        #first 500 beta = 0, last 500 beta = 2
+        if(i <= 500){y <- rnorm(20)}else{y <- rnorm(20, mean= 2 * x)}
+        pValues[i] <- summary(lm(y~x))$coeff[2, 4]
+}
+trueStatus <- rep(c("zero", "non zero"), each = 500)
+table(pValues < 0.05, trueStatus)
+```
+
+There are %5 false positives
+
+```{r}
+# Controls FWER
+table(p.adjust(pValues, method = "bonferroni") < 0.05, trueStatus)
+```
+
+we get rid of false positives but we also lose true positives.
+
+```{r}
+# Controls FDR
+table(p.adjust(pValues, method = "BH") <0.05, trueStatus)
+```
+
+fewer false positives without losing true positives.
+
+
+p-values versus adjusted p-values to understand what p adjustment does
+```{r}
+par(mfrow = c(1,2))
+plot(pValues, p.adjust(pValues, method = "bonferroni"), pch = 19)
+plot(pValues, p.adjust(pValues, method = "BH"), pch = 19)
+```
+
