@@ -200,3 +200,127 @@ plot(pValues, p.adjust(pValues, method = "bonferroni"), pch = 19)
 plot(pValues, p.adjust(pValues, method = "BH"), pch = 19)
 ```
 
+# Resampling
+
+- Bootstrapping
+- Notes on bootsrapping
+- permutation
+
+a tremendously useful tool for constructing confidence intervals and calculating standard errors for difficult statistics
+
+one of the most important procedures discovered. really liberated data analysts for inferences.
+
+for example, how would one derive a confidence interval for the median?
+
+# bootstrapping example
+
+```{r}
+library(UsingR)
+data(father.son)
+x <- father.son$sheight
+n <- length(x)
+B <- 10000
+resamples <- matrix(sample(x, n * B, replace = TRUE), B, n)
+# draw from x(sample()) use n * B numbers of resamples, where every time you take an observation you can replicate.
+# arrange with Bootstrap rows, number of sample sizes columns
+#arrange for B rows, n columns
+# every row of this matrix is now a completely resampled data set  with original datas and sample size from the original data set.
+resampleMedians <- apply(resamples, 1, median)
+qplot(resampleMedians)
+```
+
+# Notes on Bootstrap
+
+Principle : if you have a statistic that estimates some population parameter, but I don't know its sampling distribution
+
+the bootstrap principle suggests using the distribution defined by the data to approximate sampling distribution
+
+in practice, the bootstrap principle is always carried out using simulation
+
+we will cover only a few aspects of bootstrap resampling
+
+1 - sample n observations with replacement from the observed data resulting in one simulated complete data set.
+
+2 - take the median of the simulated data set
+
+3 - repeat these two steps B times, resulting in B simulated medians.(10000 or more simulations)
+
+you want B to be large for the Monte Carlo error to be small.
+
+4 - these medians are approximately drawn from the sampling distribution of the median of n observations; therefore we can
+- draw a histogram of them
+- calculate their standard deviation to estimate the standard error of the median
+- take the 2.5% and 97.5 % percentiles as a confidence interval for the median
+
+```{r}
+B <- 10000
+medians <- apply(resamples, 1, median)
+sd(medians)
+```
+
+estimated standard error of the median
+
+```{r}
+quantile(medians, c(0.025, 0.975))
+```
+
+fairly tight confidence interval
+
+```{r}
+g <- ggplot(data.frame(medians = medians), aes(x = medians))
+g <- g + geom_histogram(color = "black", fill = "lightblue", binwidth = 0.05)
+g
+```
+
+this plot is an ESTIMATE of the sample distribution of the median
+
+if we had the true population distribution, and sample it over and over again, this would be a good estimate with Monte Carlo error.
+
+
+- bootstrap is non-parametric
+- better percentile bootstrap confidence intervals correct for bias
+- there are lots of variations on bootstrap procedures; the book "An introduction to the Bootstrap" by Efron and Tibshirani is a great place to start for both bootstrap and jackknife information
+
+# permutation tests
+
+used for group comparisons
+
+- consider the null hypothesis that the distribution of the observations from each group is the same
+- then, the group labels are irrelevant
+- consider a data fram with count column and spray(group) label column
+- permute the spray(group) labels column
+- recalculate the statistics
+mean difference in counts, geometric means, T statistic..
+- calculate the percentage of simulations where the simulated statistic was more extreme (toward the alternative) than the observed
+
+
+```{r}
+subdata <- InsectSprays[InsectSprays$spray %in% c("B", "C"), ]
+y <- subdata$count
+group <- as.character(subdata$spray)
+testStat <- function(w, g) mean(w[g == "B"]) - mean(w[g == "C"])
+observedStat <- testStat(y, group)
+#correct data
+permutations <- sapply(1: 10000, function(i) testStat(y, sample(group)))
+#sampled data
+#under the null hypothesis that the group label is not related to outcome.
+observedStat
+
+```
+
+```{r}
+mean(permutations > observedStat)
+```
+
+in this data set we get 0. we couldn't find a configuration
+
+the p value is very small, close to zero(scientificly, because the permutation form of our original data is at least as big as observedStat.). so we of course reject the null hypothesis.
+
+```{r}
+qplot(permutations) + geom_vline(xintercept = 13.25)
+```
+
+as the plot shows, the original difference in original data are on the far right, as we guessed before. we can now formally present a null hypothesis test.
+
+
+
