@@ -323,4 +323,661 @@ qplot(permutations) + geom_vline(xintercept = 13.25)
 as the plot shows, the original difference in original data are on the far right, as we guessed before. we can now formally present a null hypothesis test.
 
 
+# swirl exc
+
+- power
+- multiple testing
+- resampling
+
+# power
+
+| Power comes into play when you're designing an experiment, and in
+| particular, if you're trying to determine if a null result (failing to
+| reject a null hypothesis) is meaningful. For instance, you might have to
+| determine if your sample size was big enough to yield a meaningful, rather
+| than random, result.
+
+...
+
+  |===                                                                 |   4%
+| Power gives you the opportunity to detect if your ALTERNATIVE hypothesis is
+| true.
+
+| Beta is the probability of a Type II error, accepting a false null
+| hypothesis; the complement of this is obviously (1 - beta) which represents
+| the probability of rejecting a false null hypothesis. This is good and this
+| is POWER!
+
+| Suppose we're testing a null hypothesis H_0 with an alpha level of .05.
+| Since H_a proposes that mu > 30 (the mean hypothesized by H_0), power is
+| the probability that the true mean mu is greater than the (1-alpha)
+| quantile or qnorm(.95). For simplicity, assume we're working with normal
+| distributions of which we know the variances.
+
+
+
+| First we have to emphasize a key point. The two hypotheses, H_0 and H_a,
+| actually represent two distributions since they're talking about means or
+| centers of distributions. H_0 says that the mean is mu_0 (30 in our
+| example) and H_a says that the mean is mu_a.
+
+...
+
+  |==========                                                          |  15%
+| We're assuming normality and equal variance, say sigma^2/n, for both
+| hypotheses, so under H_0, X'~ N(mu_0, sigma^2/n) and under H_a, X'~ N(mu_a,
+| sigma^2/n).
+
+
+
+
+| Now back to numbers. Our test for determining rejection of H_0 involved
+| comparing a test statistic, namely Z=(X'-30)/(sigma/sqrt(n)), against some
+| quantile, say Z_95, which depended on our level size alpha (.05 in this
+| case). H_a proposed that mu > mu_0, so we tested if Z>Z_95.  This is
+| equivalent to X' > Z_95 * (sigma/sqrt(n)) + 30, right?
+
+...
+
+  |===========================                                         |  40%
+| Recall that nifty R function pnorm, which gives us the probability that a
+| value drawn from a normal distribution is greater or less than/equal to a
+| specified quantile argument depending on the flag lower.tail. The function
+| also takes a mean and standard deviation as arguments.
+
+
+| Suppose we call pnorm with the quantile 30 + Z_95 * (sigma/sqrt(n)) and
+| specify mu_a as our mean argument. This would return a probability which we
+| can interpret as POWER. Why?
+
+
+ Recall our picture of two distributions. 30 + Z_95 * (sigma/sqrt(n))
+| represents the point at which our vertical line falls. It's the point on
+| the null distribution at the (1-alpha) level.
+
+
+ Study this picture. Calling pnorm with 30 + Z_95 * (sigma/sqrt(n)) as the
+| quantile and mu_a, say 32, as the mean and lower.tail=FALSE does what?
+
+returns the area under the blue curve to the right of the line
+
+
+
+
+First, define a variable z as qnorm(.95)
+
+> z <- qnorm(.95)
+
+| Keep up the great work!
+
+  |================================                                    |  47%
+| Run pnorm now with the quantile 30+z, mean=30, and lower.tail=FALSE. We've
+| specified sigma and n so that the standard deviation of the sample mean is
+| 1.
+
+> pnorm(30 + z, mean = 30, lower.tail = FALSE)
+[1] 0.05
+
+| Keep up the great work!
+
+  |=================================                                   |  48%
+| That's not surprising, is it? With the mean set to mu_0 the two
+| distributions, null and alternative, are the same and power=alpha. Now run
+| pnorm now with the quantile 30+z, mean=32, and lower.tail=FALSE.
+
+> pnorm(30+z, mean = 32, lower.tail = FALSE)
+[1] 0.63876
+
+| Keep working like that and you'll get there!
+
+  |=================================                                   |  49%
+| See how this is much more powerful? 64% as opposed to 5%. When the sample
+| mean is quite different from (many standard errors greater than) the mean
+| hypothesized by the null hypothesis, the probability of rejecting H_0 when
+| it is false is much higher. That is power!
+
+To see this, run pnorm now with the quantile 30+z, mean=32 and sd=1. Don't
+| forget to set lower.tail=FALSE so you get the right tail.
+
+> pnorm(30 + z, mean = 32, sd = 1, lower.tail = FALSE)
+[1] 0.63876
+
+| That's correct!
+
+  |====================================                                |  53%
+| Now run pnorm now with the quantile 30+z*2, mean=32 and sd=2. Don't forget
+| to set lower.tail=FALSE so you get the right tail.
+
+> pnorm(30 + z, mean = 32, sd = 2, lower.tail = FALSE)
+[1] 0.5704709
+
+| You almost had it, but not quite. Try again. Or, type info() for more
+| options.
+
+| Type pnorm(30+z*2,mean=32,sd=2,lower.tail=FALSE) at the command prompt.
+
+> pnorm(30 + z*2, mean = 32, sd = 2, lower.tail = FALSE)
+[1] 0.259511
+
+| Excellent job!
+
+  |=====================================                               |  54%
+| See the power drain from 64% to 26% ? Let's review some basic facts about
+| power. We saw before in our pictures that the power of the test depends on
+| mu_a. When H_a specifies that mu > mu_0, then as mu_a grows and exceeds
+| mu_0 increasingly, what happens to power?
+
+increases
+
+
+
+ If H_a proposed that mu != mu_0 we would calculate the one sided power
+| using alpha / 2 in the direction of mu_a (either less than or greater than
+| mu_0). (This is only approximately right, it excludes the probability of
+| getting a large test statistic in the opposite direction of the truth.
+
+Finally, if H_a specified that mu < mu_0 could we still do the same kind of
+| power calculations?
+
+1: Yes
+2: No
+
+Selection: 1
+
+| You got it!
+
+  |============================================                        |  65%
+| Suppose H_a says that mu > mu_0. Then power = 1 - beta = Prob ( X' > mu_0 +
+| z_(1-alpha) * sigma/sqrt(n)) assuming that X'~ N(mu_a,sigma^2/n). Which
+| quantities do we know in this statement, given the context of the problem?
+| Let's work through this.
+
+
+ After the null mean mu_0 is proposed what does the designer of the
+| hypothesis test specify in order to reject or fail-to-reject H_0? In other
+| words, what is the level size of the test?
+
+1: mu_a
+2: alpha
+3: mu_0
+4: beta
+
+Selection: 2
+
+| You got it!
+
+  |===============================================                     |  68%
+| So we know that the quantities mu_0 and alpha are specified by the test
+| designer. In the statement 1 - beta = Prob( X' > mu_0 + z_(1-alpha) *
+| sigma/sqrt(n)) given mu_a > mu_0, mu_0 and alpha are specified, and X'
+| depends on the data. The other four quantities, (beta, sigma, n, and mu_a),
+| are all unknown.
+
+...
+
+  |===============================================                     |  70%
+| It should be obvious that specifying any three of these unknowns will allow
+| us to solve for the missing fourth. Usually, you only try to solve for
+| power (1-beta) or the sample size n.
+
+...
+
+  |================================================                    |  71%
+| An interesting point is that power doesn't need mu_a, sigma and n
+| individually.  Instead only sqrt(n)*(mu_a - mu_0) /sigma is needed. The
+| quantity (mu_a - mu_0) / sigma is called the EFFECT SIZE. This is the
+| difference in the means in standard deviation units. It is unit free so it
+| can be interpreted in different settings.
+
+
+We'll work through some examples of this now. However, instead of assuming
+| that we're working with normal distributions let's work with t
+| distributions. Remember, they're pretty close to normal with large enough
+| sample sizes.
+
+...
+
+  |==================================================                  |  73%
+| Power is still a probability, namely P( (X' - mu_0)/(S /sqrt(n)) >
+| t_(1-alpha, n-1) given H_a that mu > mu_a ). Notice we use the t quantile
+| instead of the z. Also, since the proposed distribution is not centered at
+| mu_0, we have to use the non-central t distribution.
+
+...
+
+  |==================================================                  |  74%
+| R comes to the rescue again with the function power.t.test. We can omit one
+| of the arguments and the function solves for it. Let's first use it to
+| solve for power.
+
+
+We'll run it three times with the same values for n (16) and alpha (.05)
+| but different delta and standard deviation values. We'll show that if delta
+| (difference in means) divided by the standard deviation is the same, the
+| power returned will also be the same. In other words, the effect size is
+| constant for all three of our tests.
+
+
+
+# multiple testing
+
+| Given that data is valuable and we'd like to get the most out of it, we
+| might use it to test several hypotheses. If we have an alpha level of .05
+| and we test 20 hypotheses, then on average, we expect one error, just by
+| chance.
+
+ Another potential problem is that after running several tests, only the
+| lowest p-value might be reported OR all p-values under some threshold might
+| be considered significant. Undoubtedly, some of these would be false.
+
+Luckily, we have clever ways of minimizing errors in this situation. That's
+| what we'll address.  We'll define specific error measures and then
+| statistical ways of correcting or limiting them.
+
+Multiple testing is particularly relevant now in this age of BIG data.
+| Statisticians are tasked with questions such as "Which variables matter
+| among the thousands measured?" and "How do you relate unrelated
+| information?"
+
+
+The p-value is "the probability under the null hypothesis of obtaining
+| evidence as or more extreme than your test statistic (obtained from your
+| observed data) in the direction of the alternative hypothesis." Of course
+| p-values are related to significance or alpha levels, which are set before
+| the test is conducted (often at 0.05).
+
+
+If a p-value is found to be less than alpha (say 0.05), then the test
+| result is considered statistically significant, i.e., surprising and
+| unusual, and the null hypothesis (the status quo) is ?
+
+1: accepted
+2: rejected
+3: revised
+4: renamed the aleph null hypothesis
+
+Selection: 
+Enter an item from the menu, or 0 to exit
+Selection: 2
+
+| Keep up the great work!
+
+  |==============                                                      |  21%
+| Now consider this chart copied from
+| http://en.wikipedia.org/wiki/Familywise_error_rate. Suppose we've tested m
+| null hypotheses, m_0 of which are actually true, and m-m_0 are actually
+| false. Out of the m tests R have been declared significant, that is, the
+| associated p-values were less than alpha, and m-R were nonsignificant, or
+| boring results.
+
+...
+
+  |================                                                    |  23%
+| Looking at the chart, which variables are known?
+
+1: A,B,C
+2: m and R
+3: S,T,U,V
+4: m_0, and m
+
+Selection: 2
+
+| Keep working like that and you'll get there!
+
+  |=================                                                   |  25%
+| In testing the m_0 true null hypotheses, V results were declared
+| significant, that is, these tests favored the alternative
+| hypothesis. What type of error does this represent?
+
+1: Type I
+2: a serious one
+3: Type II
+4: Type III
+
+Selection: 1
+
+| That's a job well done!
+
+  |==================                                                  |  26%
+| Another name for a Type I error is False Positive, since it is
+| falsely claiming a significant (positive) result.
+
+...
+
+  |===================                                                 |  28%
+| Of the m-m_0 false null hypotheses, T were declared nonsignificant.
+| This means that these T null hypotheses were accepted (failed to be
+| rejected). What type of error does this represent?
+
+1: Type II
+2: Type I
+3: a serious one
+4: Type III
+
+Selection: 1
+
+| You are really on a roll!
+
+  |====================                                                |  30%
+| Another name for a Type II error is False Negative, since it is
+| falsely claiming a nonsignificant (negative) result.
+
+The observed R represents the number of test results declared
+| significant. These are 'discoveries', something different from the
+| status quo. V is the number of those falsely declared significant,
+| so V/R is the ratio of FALSE discoveries. Since V is a random
+| variable (i.e., unknown until we do an experiment) we call the
+| expected value of the ratio, E(V/R), the False Discovery Rate (FDR).
+
+A rose by any other name, right? How about the fraction V/m_0? From
+| the chart, m_0 represents the number of true H_0's and m_0 is
+| unknown. V is the number of those falsely declared significant, so
+| V/m_0 is the ratio of FALSE positives. Since V is a random variable
+| (i.e., unknown until we do an experiment) we call the expected value
+| of the ratio, E(V/m_0), the FALSE POSITIVE rate.
+
+
+
+Suppose we're really smart, calculate our p-values correctly, and
+| declare all tests with p < alpha as significant. This means that our
+| false positive rate is at most alpha, on average.
+
+Suppose we perform 10,000 tests and alpha = .05. How many false
+| positives do we expect on average?
+
+1: 50000
+2: 500
+3: 5000
+4: 50
+
+Selection: 2
+
+| You are quite good my friend!
+
+  |===============================                                     |  46%
+| You got it! 500 false positives seems like a lot. How do we avoid so
+| many?
+
+| It's very straightforward. We do m tests and want to control the
+| FWER at level alpha so that Pr(V >= 1) < alpha. We simply reduce
+| alpha dramatically. Set alpha_fwer to be alpha/m. We'll only call a
+| test result significant if its p-value < alpha_fwer.
+
+Sounds good, right? Easy to calculate. What would be a drawback with
+| this method?
+
+1: too many results will pass
+2: too many results will fail
+3: requires too much math
+
+Selection: 2
+
+| Excellent work!
+
+  |====================================                                |  52%
+| Another way to limit the false positive rate is to control the false
+| discovery rate (FDR). Recall this is E(V/R). This is the most
+| popular correction when performing lots of tests. It's used in lots
+| of areas such as genomics, imaging, astronomy, and other
+| signal-processing disciplines.
+
+Again, we'll do m tests but now we'll set the FDR, or E(V/R) at
+| level alpha. We'll calculate the p-values as usual and order them
+| from smallest to largest, p_1, p_2,...p_m. We'll call significant
+| any result with p_i <= (alpha*i)/m. This is the Benjamini-Hochberg
+| method (BH). A p-value is compared to a value that depends on its
+| ranking.
+
+Like the Bonferroni correction, this is easy to calculate and it's
+| much less conservative. It might let more false positives through
+| and it may behave strangely if the tests aren't independent.
+
+...
+
+  |========================================                            |  59%
+| Now consider this chart copied from the slides. It shows the
+| p-values for 10 tests performed at the alpha=.2 level and three
+| cutoff lines. The p-values are shown in order from left to right
+| along the x-axis. The red line is the threshold for No Corrections
+| (p-values are compared to alpha=.2), the blue line is the Bonferroni
+| threshold, alpha=.2/10 = .02, and the gray line shows the BH
+| correction. Note that it is not horizontal but has a positive slope
+| as we expect.
+
+With no correction, how many results are declared significant?
+
+1: 2
+2: 4
+3: 8
+4: 6
+
+Selection: 2
+
+| You nailed it! Good job!
+
+  |==========================================                          |  62%
+| With the Bonferroni correction, how many tests are declared
+| significant?
+
+1: 6
+2: 8
+3: 2
+4: 4
+
+Selection: 3
+
+| You're the best!
+
+  |===========================================                         |  64%
+| So the Bonferroni passed only half the results that the No
+| Correction (comparing p-values to alpha) method passed. Now look at
+| the BH correction. How many tests are significant with this scale?
+
+1: 3
+2: 5
+3: 7
+4: 1
+
+Selection: 1
+
+| Keep up the great work!
+
+  |=============================================                       |  66%
+| So the BH correction which limits the FWER is between the No
+| Correction and the Bonferroni. It's more conservative (fewer
+| significant results) than the No Correction but less conservative
+| (more significant results) than the Bonferroni. Note that with this
+| method the threshold is proportional to the ranking of the values so
+| it slopes positively while the other two thresholds are flat.
+
+
+Notice how both the Bonferroni and BH methods adjusted the threshold
+| (alpha) level of rejecting the null hypotheses. Another equivalent
+| corrective approach is to adjust the p-values, so they're not
+| classical p-values anymore, but they can be compared directly to the
+| original alpha.
+
+
+
+Suppose the p-values are p_1, ... , p_m.  With the Bonferroni method
+| you would adjust these by setting p'_i = max(m * p_i, 1) for each
+| p-value. Then if you call all p'_i < alpha significant you will
+| control the FWER.
+
+...
+
+  |================================================                    |  70%
+| To demonstrate some of these concepts, we've created an array of
+| p-values for you. It is 1000-long and the result of a linear
+| regression performed on random normal x,y pairs so there is no true
+| significant relationship between the x's and y's.
+
+
+Use the R command head to see the first few entries of the array
+| pValues.
+
+> head(pValues)
+[1] 0.5334915 0.2765785 0.8380943 0.6721730 0.8122037 0.4078675
+
+| Great job!
+
+  |==================================================                  |  74%
+| Now count the number of entries in the array that are less than the
+| value .05. Use the R command sum, and the appropriate Boolean
+| expression.
+
+> sum(pValues < .05)
+[1] 51
+
+| Your dedication is inspiring!
+
+  |===================================================                 |  75%
+| So we got around 50 false positives, just as we expected
+| (.05*1000=50). The beauty of R is that it provides a lot of built-in
+| statistical functionality. The function p.adjust is one example. The
+| first argument is the array of pValues. Another argument is the
+| method of adjustment. Once again, use the R function sum and a
+| boolean expression using p.adjust with method="bonferroni" to
+| control the FWER.
+
+
+sum(p.adjust(pValues, method = "bonferroni") < .05)
+[1] 0
+
+| You are doing so well!
+
+  |====================================================                |  77%
+| So the correction eliminated all the false positives that had passed
+| the uncorrected alpha test. Repeat the same experiment, this time
+| using the method "BH" to control the FDR.
+
+sum(p.adjust(pValues, method = "BH") < .05)
+[1] 0
+
+| All that hard work is paying off!
+
+  |======================================================              |  79%
+| So the BH method also eliminated all the false positives. Now we've
+| generated another 1000-long array of p-values, this one called
+| pValues2. In this data, the first half ( 500 x/y pairs) contains x
+| and y values that are random and the second half contain x and y
+| pairs that are related, so running a linear regression model on the
+| 1000 pairs should find some significant (not random) relationship.
+
+We also created a 1000-long array of character strings, trueStatus.
+| The first 500 entries are "zero" and the last are "not zero". Use
+| the R function tail to look at the end of trueStatus.
+
+> tail(trueStatus)
+[1] "not zero" "not zero" "not zero" "not zero" "not zero" "not zero"
+
+| Great job!
+
+  |========================================================            |  82%
+| Once again we can use R's greatness to count and tabulate for us. We
+| can call the R function table with two arguments, a boolean such as
+| pValues2<.05, and the array trueStatus. The boolean obviously has
+| two outcomes and each entry of trueStatus has one of two possible
+| values. The function table aligns the two arguments and counts how
+| many of each combination (TRUE,"zero"), (TRUE,"not zero"),
+| (FALSE,"zero"), and (FALSE,"not zero") appear. Try it now.
+
+> table(pValues2 <.05, trueStatus)
+       trueStatus
+        not zero zero
+  FALSE        0  476
+  TRUE       500   24
+
+| Your dedication is inspiring!
+
+  |=========================================================           |  84%
+| We see that without any correction all 500 of the truly significant
+| (nonrandom) tests were correctly identified in the "not zero"
+| column. In the zero column (the truly random tests), however, 24
+| results were flagged as significant.
+
+
+What is the percentage of false positives in this test?
+
+> 24/500
+[1] 0.048
+
+| You are doing so well!
+
+  |===========================================================         |  87%
+| Just as we expected - around 5% or .05*100.
+
+...
+
+  |============================================================        |  89%
+| Now run the same table function, however, this time use the call to
+| p.adjust with the "bonferroni" method in the boolean expression.
+| This will control the FWER.
+
+table(p.adjust(pValues2, method = "bonferroni") <.05, trueStatus)
+       trueStatus
+        not zero zero
+  FALSE       23  500
+  TRUE       477    0
+
+| All that hard work is paying off!
+
+  |=============================================================       |  90%
+| Since the Bonferroni correction method is more conservative than
+| just comparing p-values to alpha all the truly random tests are
+| correctly identified in the zero column. In other words, we have no
+| false positives. However, the threshold has been adjusted so much
+| that 23 of the truly significant results have been misidentified in
+| the not zero column.
+
+Now run the same table function one final time. Use the call to
+| p.adjust with "BH" method in the boolean expression. This will
+| control the false discovery rate.
+
+> table(p.adjust(pValues2, method = "BH") <.05, trueStatus)
+       trueStatus
+        not zero zero
+  FALSE        0  487
+  TRUE       500   13
+
+| Your dedication is inspiring!
+
+  |================================================================    |  93%
+| Again, the results are a compromise between the No Corrections and
+| the Bonferroni. All the significant results were correctly
+| identified in the "not zero" column but in the random ("zero")
+| column 13 results were incorrectly identified. These are the false
+| positives. This is roughly half the number of errors in the other
+| two runs.
+
+
+Here's a plot of the two sets of adjusted p-values, Bonferroni on
+| the left and BH on the right. The x-axis indicates the original
+| p-values. For the Bonferroni, (adjusting by multiplying by 1000, the
+| number of tests), only a few of the adjusted values are below 1. For
+| the BH, the adjusted values are slightly larger than the original
+| values.
+
+
+We'll conclude by saying that multiple testing is an entire subfield
+| of statistical inference. Usually a basic Bonferroni/BH correction
+| is good enough to eliminate false positives, but if there is strong
+| dependence between tests there may be problems. Another correction
+| method to consider is "BY".
+
+...
+
+  |=================================================================== |  98%
+| Congrats! We hope you liked the multiple concepts and questions you
+| saw in this lesson.
+
+
+
+
+
+
+
+
+
+
 
