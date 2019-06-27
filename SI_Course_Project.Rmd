@@ -1,0 +1,88 @@
+---
+title: "SI Course Project"
+author: "Yigit Ozan Berk"
+date: "6/27/2019"
+output: pdf_document
+---
+
+# Overview
+In a few (2-3) sentences explain what is going to be reported on.
+
+
+# Simulations
+
+Initiation of required packages:
+```{r}
+library(ggplot2)
+
+```
+
+
+Simulating 1000 sets of 40 exponential random variables:
+
+```{r}
+set.seed(121212)
+my_lambda <- 0.2
+my_n <- 40
+nsim <- 1000
+
+samples <- matrix(nrow = 40, ncol = 1000)
+for(i in 1:1000) samples[,i] = rexp(my_n, my_lambda)
+```
+
+Means, Standard Deviations, and Variances of simulated 40 exponential random variables:
+
+```{r}
+mns <- apply(samples, 2, mean)
+
+sdevs <- apply(samples, 2, sd)
+
+vars <- apply(samples, 2, var)
+```
+
+The theoretical mean of the distribution is lambda = 1/0.2 = `1/.2`
+
+The overall average of 1000 simulated 40 exponential random variables are `mean(mns)`
+
+
+```{r}
+hist(mns, main = "Distribution of Averages",
+     xlab = "E[X']")
+abline(v = 5, col = "magenta", lwd = 2)
+abline(v = quantile(mns, c(.025, .975)), col = "lightblue", lwd = 2)
+```
+
+The distribution of averages is centered around the theoretical mean as expected; with 95% confidence interval:
+```{r}
+quantile(mns, c(.025, .975))
+```
+
+With a theoretical variance of 25, the distribution of observed variances are as follows
+
+```{r}
+hist(vars, main = "Distribution of Variances",
+     xlab = "var")
+abline(v = 25, col = "magenta", lwd = 2)
+abline(v = quantile(vars, c(.025,.975)), col = "lightblue", lwd = 2)
+```
+
+```{r}
+hist(sdevs, main = "Distribution of St. Deviations",
+     xlab = "sd")
+abline(v = 5, col = "magenta", lwd = 2)
+abline(v = quantile(sdevs, c(.025,.975)), col = "lightblue", lwd = 2)
+```
+
+
+
+# Sample Mean versus Theoretical Mean
+
+
+# Sample Variance versus Theoretical Variance
+
+
+# Distribution
+
+
+# Part 2 - ToothGrowth Data Analysis
+
