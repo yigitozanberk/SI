@@ -40,6 +40,8 @@ sdevs <- apply(samples, 2, sd)
 vars <- apply(samples, 2, var)
 ```
 
+# Sample Mean versus Theoretical Mean
+
 The theoretical mean of the distribution is lambda = 1/0.2 = `1/.2`
 
 The overall average of 1000 simulated 40 exponential random variables are `mean(mns)`
@@ -57,7 +59,9 @@ The distribution of averages is centered around the theoretical mean as expected
 quantile(mns, c(.025, .975))
 ```
 
-With a theoretical variance of 25, the distribution of observed variances are as follows
+# Sample Variance versus Theoretical Variance
+
+With a theoretical variance of 25 *(1/lambda^2)*, the distribution of observed variances are as follows
 
 ```{r}
 hist(vars, main = "Distribution of Variances",
@@ -65,6 +69,11 @@ hist(vars, main = "Distribution of Variances",
 abline(v = 25, col = "magenta", lwd = 2)
 abline(v = quantile(vars, c(.025,.975)), col = "lightblue", lwd = 2)
 ```
+
+The average variation in the simulations is observed as 25.03814 which is close to theoretical variance. 
+
+If we look at the distribution of standard deviations, we can see that it's centered at the theoretical standard deviation with an approximately normal distribution:
+
 
 ```{r}
 hist(sdevs, main = "Distribution of St. Deviations",
@@ -74,15 +83,108 @@ abline(v = quantile(sdevs, c(.025,.975)), col = "lightblue", lwd = 2)
 ```
 
 
-
-# Sample Mean versus Theoretical Mean
-
-
-# Sample Variance versus Theoretical Variance
-
-
 # Distribution
+
+If we look at all the random draws of the exponential random variables, we can see the graph of the frequencies constitutes an exponential distribution. By CLT as the size of the variables increases, the frequency density will transform into a finer exponential distribution density graph.
+
+```{r}
+alls <- NULL
+for(i in 1:40) {
+        alls <- c(alls, samples[i, ])
+}
+qplot(alls, binwidth = 1)
+```
+
+However, if we look at the distribution of averages of 40 exponential random variables over the 1000 simulations, we can clearly see the frequency distribution is not equal to an exponential distribution:
+
+```{r}
+g <- qplot(mns, binwidth = .2)
+g <- g + geom_vline(xintercept = 5)
+g <- g + geom_vline(xintercept = quantile(mns, c(.025, .975)), col = "magenta")
+g <- g + ggtitle("Distribution of Averages")
+g
+
+```
+
+Instead, the distribution of averages is roughly a normal distribution with mean centered around the theoretical mean(5) of the population. One can tell the distribution is roughly normal by the bell shape curve of the frequency density.
+
+By CLT as the number of simulations increases, the distribution of averages of these 40 random draws will look more and more like a normal distribution with mean equal to theoretical mean of the population. 
+
+
 
 
 # Part 2 - ToothGrowth Data Analysis
+
+
+At first look, the data has 60 observations with 3 variables, tooth growth length, suplement type, used dosage:
+
+```{r}
+library(datasets)
+library(dplyr)
+str(ToothGrowth)
+
+```
+
+```{r}
+head(ToothGrowth)
+```
+
+When we look at the composition of the observed data, we can see that there are length variables for 10 observations of half dosage, 10 obs of 1 dose, and 10 obs of 2 doses for each OJ supplement and VC supplement.
+
+```{r}
+table(ToothGrowth[ToothGrowth$supp == "OJ", 3])
+```
+
+```{r}
+table(ToothGrowth[ToothGrowth$supp == "VC", 3])
+```
+
+We can compare the difference in tooth growth between different supplements and different doses of supplements.
+
+Firstly, let's see the range of the tooth growth in each supplement type 
+
+```{r}
+myVC <- ToothGrowth %>% filter(supp == "VC")
+myOJ <- ToothGrowth %>% filter(supp == "OJ")
+
+range(myVC$len)
+
+```
+
+```{r}
+range(myOJ$len)
+```
+
+VC results seem to have a vider range than OJ.
+
+The overall difference of means is as follows:
+
+```{r}
+mean(myOJ$len) - mean(myVC$len)
+```
+
+On average, it looks like the tooth with OJ supplement grew 3.7 units more than tooth with VC supplement.
+
+However, this generalisation is definitely not unbiased, because we know that the data contains length results of different doses. The average difference of tooth growth may be variable depending on the dosage. 
+
+As the sample size is not very large, we can check all the data we have on a scatterplot:
+
+```{r}
+myVC$dose <- as.factor(myVC$dose)
+qplot(y = len, data = myVC, col = dose, ylab = "Tooth Growth", main = "VC Supp")
+```
+
+```{r}
+myOJ$dose <- as.factor(myOJ$dose)
+qplot(y = len, data = myOJ, col = dose, ylab = "Tooth Growth", main = "OJ Supp")
+```
+
+At first look, VC supp results had a vider range than OJ supp results, but upon closer look, we see that there is greater variation in OJ supplements. We can test this with a hypothesis. 
+
+H_0:  sd_oj > sd_vc  ,for every dose subset
+
+
+
+
+
 
