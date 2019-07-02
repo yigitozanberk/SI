@@ -6,9 +6,19 @@ output: pdf_document
 ---
 
 # Overview
-In a few (2-3) sentences explain what is going to be reported on.
+Part 1 :
+In this project you will investigate the exponential distribution in R and compare it with the Central Limit Theorem. The exponential distribution can be simulated in R with rexp(n, lambda) where lambda is the rate parameter. The mean of exponential distribution is 1/lambda and the standard deviation is also 1/lambda. Set lambda = 0.2 for all of the simulations. You will investigate the distribution of averages of 40 exponentials. Note that you will need to do a thousand simulations.
+
+Part 2:
+Now in the second portion of the project, we're going to analyze the ToothGrowth data in the R datasets package.
+
+Load the ToothGrowth data and perform some basic exploratory data analyses
+Provide a basic summary of the data.
+Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. (Only use the techniques from class, even if there's other approaches worth considering)
+State your conclusions and the assumptions needed for your conclusions.
 
 
+# Part 1
 # Simulations
 
 Initiation of required packages:
@@ -179,12 +189,199 @@ myOJ$dose <- as.factor(myOJ$dose)
 qplot(y = len, data = myOJ, col = dose, ylab = "Tooth Growth", main = "OJ Supp")
 ```
 
-At first look, VC supp results had a vider range than OJ supp results, but upon closer look, we see that there is greater variation in OJ supplements. We can test this with a hypothesis. 
+At first look, VC supp results had a vider range than OJ supp results, but upon closer look, we see that there is greater variation in OJ supplements. 
+
+We can test this with a hypothesis. 
 
 H_0:  sd_oj > sd_vc  ,for every dose subset
 
+But first, let's see the more basic hypothese until this point:
+
+mu_VC0.5 < mu_VC1
+mu_VC1 < mu_VC2
+
+mu_OJ0.5 < mu_OJ1
+mu_OJ1 < mu_OJ2
+
+
+and see the confidence intervals in which these are true.
+
+## Analyzing VC Supp Effects on Tooth Growth
+
+### assumptions
+
+To calculate the confidence interval of this hypothesis, equal variance among groups is assumed.
+
+The sample distribution is assumed to be normal. As the sample size is small, T distribution methods are applied.
+
+### H_0
+
+The null hypothesis is that the mean of dose 0.5 is equal to the mean of dose 1.
+
+The second null hpytohesis is that the mean of dose 1 is equal to the mean of dose 2.
+
+### calculation
+
+First we need to organize the groups into subsets
+```{r}
+VC0.5 <- myVC %>% filter(dose == "0.5")
+VC1 <- myVC %>% filter(dose == "1")
+VC2 <- myVC %>% filter(dose == "2")
+#example outlook
+VC1
+```
+
+Then, calculating the confidence intervals:
+
+Testing dose 0.5 and dose 1:
+
+H_0 : The mean of dose 0.5 is equal to the mean of dose 1.
+
+```{r}
+t.test(VC1$len - VC0.5$len, paired = F, var.equal = T)
+```
+
+According to the T test, p value is smaller than .05 so we reject the null hypothesis that the mean differences is equal to zero. The mean of VC0.5 is 6.13 estimated standard errors away from the mean of VC1. Of which the probability of happening if the means are equal is 0.0001715. 
+
+The difference of means is of 8.79 units.
+
+Our related power is
+```{r}
+power.t.test(n = 20, delta = mean(VC1$len) - mean(VC0.5$len), sd = sd(myVC$len), type = "one.sample", alt = "one.sided")$power
+```
+
+Testing dose 2 and dose 1:
+
+H_0 : The mean of dose 1 is equal to the mean of dose 2.
+
+```{r}
+t.test(VC2$len - VC1$len, paired = F, var.equal = T)
+```
+
+According to the T test, p value is smaller than 0.05 so we reject the null hypothesis that the mean differences is equal to zero. The mean of VC2 is 5.346 estimated standard errors away from the mean of VC1. Of which the probability of happening if the means are equal is 0.0004648
+
+The difference of means is of 9.37 units.
+
+Our related power is
+
+```{r}
+power.t.test(n = 20, delta = mean(VC2$len) - mean(VC1$len), sd = sd(myVC$len), type = "one.sample", alt = "one.sided")$power
+```
+
+
+To visualize the medians in a graph together:
+
+```{r}
+g <- qplot(y = myVC$len, data = myVC, col = dose, ylab = "ToothGrowth", main = "VC Supp")
+g <- g + geom_hline(yintercept = median(VC0.5$len), col = "magenta")
+g <- g + geom_hline(yintercept = median(VC1$len), col = "orange")
+g <- g + geom_hline(yintercept = median(VC2$len), col = "lightblue")
+g <- g + geom_text(aes(0,median(VC0.5$len),label = median(VC0.5$len), vjust = -1))
+g <- g + geom_text(aes(0,median(VC1$len),label = median(VC1$len), vjust = -1))
+g <- g + geom_text(aes(0,median(VC2$len),label = median(VC2$len), vjust = -1))
+g
+```
+
+The median values depending on the dosage is given in the graph above. With %95 confidence we can say the the tooth growth increases with the increase of dose of VC supp.
+
+The average unit growths depending on the dosage with %95 confidence interval are given below:
+
+```{r}
+rbind(
+        t.test(VC0.5$len)$conf,
+        t.test(VC1$len)$conf,
+        t.test(VC2$len)$conf
+)
+```
+
+In conclusion, according to our analysis, with %95 confidence, we can say that:
+
+The tooth growth with VC supp dose 0.5 is between 6.01 and 9.94 units;
+
+The tooth growth with VC supp dose 1 is between 14.97 and 18.56 units;
+
+the tooth growth with VC supp dose 2 is between 22.70 and 29.57 units.
+
+
+## Analyzing OJ Supp Effects on Tooth Growth
+
+### assumptions
+
+To calculate the confidence interval of this hypothesis, unequal variance among groups is assumed. 
+
+As the variances are unequal, the data do not follow a T distribution. But it can be estimated by a T distribution.
+
+### H_0
+
+The null hypothesis is that the mean of dose 0.5 is equal to the mean of dose 1.
+
+The second null hpytohesis is that the mean of dose 1 is equal to the mean of dose 2.
+
+### calculation
+
+First we need to organize the groups into subsets:
+
+```{r}
+OJ0.5 <- myOJ %>% filter(dose == "0.5")
+OJ1 <- myOJ %>% filter(dose == "1")
+OJ2 <- myOJ %>% filter(dose == "2")
+```
+
+Then, calculating the confidence intervals:
+
+H_0 : The mean of dose 0.5 is equal to the mean of dose 1.
+
+```{r}
+t.test(OJ1$len - OJ0.5$len, paired = F, var.equal = F)
+```
+
+The p value is smaller than 0.05. So we reject the null hypotesis. The observed mean difference is 4.1635 estimated standard deviations away from the OJ1 mean. Of which the probability of happening if the null hypothesis is true is 0.002435.
+
+The difference of means is 9.47 units.
 
 
 
+H_0 : The mean of dose 1 is equal to the mean of dose 2.
+
+```{r}
+t.test(OJ2$len - OJ1$len, paired = F, var.equal = F)
+```
+
+The p value is larger than 0.05. 
+
+So we fail to reject the null hypothesis. 
+
+The observed mean difference is 1.9435 estimated standard deviations away from the OJ2 mean. Of which the probability of happening if the null hypothesis is true is 0.08384. 
+
+The difference of means is 3.36 units. 
+
+Let's visualize the medians on a graph
+
+```{r}
+myOJ12 <- rbind(OJ1, OJ2)
+g2 <- qplot(y = myOJ$len, data = myOJ, col = dose, ylab = "ToothGrowth", main = "OJ Supp")
+g2 <- g2 + geom_hline(yintercept = median(OJ0.5$len), col = "magenta")
+g2 <- g2 + geom_hline(yintercept = median(myOJ12$len), col = "orange")
+g2 <- g2 + geom_text(aes(0,median(OJ0.5$len),label = median(VC0.5$len), vjust = -1))
+g2 <- g2 + geom_text(aes(0,median(myOJ12$len),label = median(VC1$len), vjust = -1))
+g2
+```
+
+The median values depending on the dosage is given in the graph above. With %95 confidence we can say the the tooth growth increases if dosage of OJ is >0.5.
+
+The average unit growths depending on the dosage with %95 confidence interval are given below:
+
+```{r}
+rbind(
+        t.test(OJ0.5$len)$conf,
+        t.test(myOJ12$len)$conf
+)
+```
+
+In conclusion, according to our analysis, with %95 confidence, we can say that:
+
+The tooth growth with OJ supp dose 0.5 is between 10.03 and 16.42 units;
+
+The tooth growth with OJ supp dose 1 or dose 2 is between 22.65 and 26.10 units.
 
 
