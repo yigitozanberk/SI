@@ -60,7 +60,7 @@ range(myVC$len)
 range(myOJ$len)
 ```
 
-VC results seem to have a vider range than OJ.
+VC results seem to have a wider range than OJ.
 
 The overall difference of means is as follows:
 
@@ -142,7 +142,7 @@ The difference of means is of 8.79 units.
 
 Our related power is
 ```{r}
-power.t.test(n = 20, delta = mean(VC1$len) - mean(VC0.5$len), sd = sd(myVC$len), type = "one.sample", alt = "one.sided")$power
+power.t.test(n = 20, delta = (mean(VC1$len) - mean(VC0.5$len)), sd = sd(myVC$len), type = "one.sample", alt = "one.sided")$power
 ```
 
 Testing dose 2 and dose 1:
@@ -160,7 +160,7 @@ The difference of means is of 9.37 units.
 Our related power is
 
 ```{r}
-power.t.test(n = 20, delta = mean(VC2$len) - mean(VC1$len), sd = sd(myVC$len), type = "one.sample", alt = "one.sided")$power
+power.t.test(n = 20, delta = (mean(VC2$len) - mean(VC1$len)), sd = sd(myVC$len), type = "one.sample", alt = "one.sided")$power
 ```
 
 
@@ -234,6 +234,10 @@ The p value is smaller than 0.05. So we reject the null hypotesis. The observed 
 
 The difference of means is 9.47 units.
 
+Our related probability of rejecting the null hypothesis when it is false is(power):
+```{r}
+power.t.test(n = 20, delta = mean(OJ1$len)- mean(OJ0.5$len), sd = sqrt((9*sd(OJ1$len)^2+9*sd(OJ0.5$len)^2)/18), type = "two.sample", alt = "two.sided")$power
+```
 
 
 H_0 : The mean of dose 1 is equal to the mean of dose 2.
@@ -250,6 +254,12 @@ The observed mean difference is 1.9435 estimated standard deviations away from t
 
 The difference of means is 3.36 units. 
 
+Our related power is:
+```{r}
+power.t.test(n = 20, delta = mean(OJ2$len)- mean(OJ1$len), sd = sqrt((9*sd(OJ2$len)^2+9*sd(OJ1$len)^2)/18), type = "two.sample", alt = "two.sided")$power
+```
+
+
 Let's visualize the medians on a graph
 
 ```{r}
@@ -257,8 +267,8 @@ myOJ12 <- rbind(OJ1, OJ2)
 g2 <- qplot(y = myOJ$len, data = myOJ, col = dose, ylab = "ToothGrowth", main = "OJ Supp")
 g2 <- g2 + geom_hline(yintercept = median(OJ0.5$len), col = "magenta")
 g2 <- g2 + geom_hline(yintercept = median(myOJ12$len), col = "orange")
-g2 <- g2 + geom_text(aes(0,median(OJ0.5$len),label = median(VC0.5$len), vjust = -1))
-g2 <- g2 + geom_text(aes(0,median(myOJ12$len),label = median(VC1$len), vjust = -1))
+g2 <- g2 + geom_text(aes(0,median(OJ0.5$len),label = median(OJ0.5$len), vjust = -1))
+g2 <- g2 + geom_text(aes(0,median(myOJ12$len),label = median(OJ1$len), vjust = -1))
 g2
 ```
 
@@ -278,3 +288,44 @@ In conclusion, according to our analysis, with %95 confidence, we can say that:
 The tooth growth with OJ supp dose 0.5 is between 10.03 and 16.42 units;
 
 The tooth growth with OJ supp dose 1 or dose 2 is between 22.65 and 26.10 units.
+
+## Comparing the Two Different Medications
+
+Lastly, we can compare the two different medications.
+
+```{r}
+rbind(
+        c(mean(VC0.5$len), mean(OJ0.5$len)),
+        c(mean(VC1$len), mean(OJ1$len)),
+        c(mean(VC2$len), mean(OJ2$len))
+        
+)
+```
+
+At first look, we can see that for doses 0.5 and 1, OJ has a superior tooth growth output. However, for doses of 2, the difference is not that big. 
+
+Let's compare the supplements depending on dosage level
+```{r}
+rbind(
+        t.test(OJ0.5$len - VC0.5$len, paired = F, var.equal = F)$conf,
+        t.test(OJ1$len - VC1$len, paired = F, var.equal = F)$conf,
+        t.test(OJ2$len -  VC2$len, paired = F, var.equal = F)$conf
+)
+```
+
+As we predicted above, for doses 0.5 and 1, the confidence intervals are both positive, which means with 95% confidence we can say that OJ supplement gives out more tooth growth than VC supplement. 
+
+However, for doses of 2, the 95% confidence interval contains 0, and the distribution is more or less evenly distributed with a center close to 0. 
+
+Let's see more details about the test of hypothesis that the means of both groups are equal.
+
+H_0 : mu_OJ2 == mu_VC2
+
+```{r}
+t.test(OJ2$len - VC2$len, paired = F, var.equal = F)
+```
+
+We can see that the p-value is nowhere near 0.05. Moreover, we can instead see that with a p-value of .967 we can say that the average tooth growth of OJ and VC supllements at doses of 2 are the same.
+
+
+
